@@ -115,6 +115,7 @@ const App: React.FC = () => {
                 </div>
                 <p className="text-slate-400 text-lg">
                     Leverage AI to get data-driven insights on skill requirements for your dream job.
+                    Note: This is a class project for BUSA 521 developed and maintained by Sujata Adhikari.
                 </p>
             </header>
 
@@ -221,3 +222,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+
