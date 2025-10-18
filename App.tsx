@@ -109,7 +109,7 @@ const App: React.FC = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 14.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"></path>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 15c-2.488 0-4.5-2.013-4.5-4.5s2.012-4.5 4.5-4.5c.334 0 .66.042.98.123m-12.96 8.754A4.502 4.502 0 017.5 15c-2.488 0-4.5-2.013-4.5-4.5S5.012 6 7.5 6c1.554 0 2.94.788 3.75 2"></path>
                     </svg>
-                     <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 text-transparent bg-clip-text">
+                     <h1 className="text-3xl md:text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 text-transparent bg-clip-text">
                         AI Job Market Insights for College Graduate
                      </h1>
                 </div>
