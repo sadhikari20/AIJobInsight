@@ -6,11 +6,6 @@ export const JOB_TITLES = [
   "Data Engineer",
   "Machine Learning Engineer",
   "AI Engineer",
-  "Software Engineer",
-  "Product Manager",
-  "UX/UI Designer",
-  "DevOps Engineer",
-  "Cybersecurity Analyst",
 ];
 
 export const JOB_LEVELS = [
