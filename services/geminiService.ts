@@ -51,8 +51,8 @@ export async function generateInsights(
     Analyze the current job market for a ${jobLevel} ${jobTitle}.
     Provide a detailed analysis covering the following areas:
     1.  **Skill Distribution**: Estimate the percentage split between technical skills and soft skills. The sum must be 100.
-    2.  **Key Insights**: Generate exactly four key insights, one for each of the following categories. For each insight, provide the corresponding icon name and detailed text. Format all text answers as a bulleted list string, with each point on a new line starting with an asterisk and a space ('* ').
-        - For icon 'skills': What are the key technical and soft skills?
+    2.  **Key Insights**: Generate exactly four key insights, one for each of the following categories. For each insight, provide the corresponding icon name and detailed text. Format all text answers as a bulleted list string, with each point on a new line starting with an asterisk and a space ('* ').Please write it in this format for each line: e.g, 99% of this job title require SQL, 80% of this job title require python.
+        - For icon 'skills': What are the key technical and soft skills? 
         - For icon 'leadership': What are the expectations regarding leadership and initiative?
         - For icon 'tenure': What is the typical employee tenure for this role before promotion or moving to another company?
         - For icon 'expertise': What are the core technical and theoretical knowledge requirements and what is the industry demand?
