@@ -48,7 +48,7 @@ export async function generateInsights(
   jobLevel: string
 ): Promise<InsightData> {
   const prompt = `
-    Analyze the current job market for a ${jobLevel} ${jobTitle}. The system must efficiently handle the processing of 50-100 job postings per query. 
+    Analyze the current job market for a ${jobLevel} ${jobTitle}. The system must efficiently handle the processing of 900-1000 job postings per query. 
     Provide a detailed analysis covering the following areas:
     1.  **Skill Distribution**: Estimate the percentage split between technical skills and soft skills. The sum must be 100.
     2.  **Key Insights**: Generate exactly four key insights, one for each of the following categories. For each insight, provide the corresponding icon name and detailed text. Format all text answers as a bulleted list string, with each point on a new line starting with an asterisk and a space ('* ').Please write it in this format for each line: e.g, 99% of this job title require SQL, 80% of this job title require python.
