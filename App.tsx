@@ -2,20 +2,124 @@ import React, { useState, useRef, useEffect } from 'react';
 import Chart from 'chart.js/auto';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 
-import { JOB_TITLES, JOB_LEVELS } from './constants';
-import { generateInsights } from './services/geminiService';
-import type { InsightData, KeyInsight } from './types';
-import { LeadershipIcon, TenureIcon, ExpertiseIcon, ChartIcon, SkillsIcon } from './components/icons';
-
+// Register ChartDataLabels plugin
 Chart.register(ChartDataLabels);
 
-const iconMap: { [key in KeyInsight['icon']]: React.FC } = {
-    skills: SkillsIcon,
-    leadership: LeadershipIcon,
-    tenure: TenureIcon,
-    expertise: ExpertiseIcon,
-};
+// --- 1. Inlined Constants (normally in src/constants.ts) ---
+const JOB_TITLES = [
+    "Business Analyst",
+    "Data Analyst",
+    "Software Engineer",
+    "Product Manager",
+    "Marketing Specialist",
+    "Financial Analyst",
+    "Human Resources Generalist",
+    "Operations Manager",
+    "UI/UX Designer",
+    "Cybersecurity Analyst",
+    "Management Consultant",
+    "Investment Banking Analyst"
+];
 
+const JOB_LEVELS = [
+    "Fresher",
+    "Junior",
+    "Mid-Level",
+    "Senior",
+    "Lead",
+    "Principal",
+    "Director",
+    "VP",
+    "Executive"
+];
+
+// --- 2. Inlined Icon Components (normally in src/components/icons.tsx) ---
+const LeadershipIcon: React.FC = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M10 20v-2a3 3 0 013-3h4a3 3 0 013 3v2M3 8a4 4 0 014-4h12a4 4 0 014 4v2.5M3 18v-2a3 3 0 013-3h4a3 3 0 013 3v2M12 12a3 3 0 100-6 3 3 0 000 6z"></path>
+    </svg>
+);
+
+const TenureIcon: React.FC = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+    </svg>
+);
+
+const ExpertiseIcon: React.FC = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+    </svg>
+);
+
+const ChartIcon: React.FC = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path>
+    </svg>
+);
+
+const SkillsIcon: React.FC = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+    </svg>
+);
+
+// --- 3. Updated Type Definitions (inlined, normally in src/types.ts) ---
+interface SkillDistribution {
+    technical_percentage: number;
+    soft_percentage: number;
+}
+
+// Your API returns an array of strings for each insight category.
+// We'll map these to a structure similar to your original `KeyInsight` for the UI rendering.
+interface RawInsightCategory {
+    title: string;
+    icon: 'skills' | 'leadership' | 'tenure' | 'expertise';
+    data: string[]; // This will hold the array of strings from the API
+}
+
+interface InsightData {
+    job_title: string;
+    career_level: string;
+    skill_distribution: SkillDistribution;
+    skill_requirements: string[];
+    leadership_experience: string[];
+    employee_tenure: string[];
+    required_expertise: string[];
+}
+
+// --- 4. Inlined API Service (normally in src/services/apiService.ts) ---
+async function getJobInsights(jobTitle: string, careerLevel: string): Promise<InsightData> {
+    const API_BASE_URL = 'http://127.0.0.1:8000'; // Your API base URL
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/insights`, {
+            method: 'POST',
+            headers: {
+                'accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                job_title: jobTitle,
+                career_level: careerLevel,
+            }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || `API error: ${response.statusText}`);
+        }
+
+        const data: InsightData = await response.json();
+        return data;
+    } catch (error) {
+        console.error("Error fetching job insights:", error);
+        throw error;
+    }
+}
+
+// --- 5. Main App Component ---
 const App: React.FC = () => {
     const [jobTitle, setJobTitle] = useState<string>(JOB_TITLES[0]);
     const [jobLevel, setJobLevel] = useState<string>(JOB_LEVELS[0]);
@@ -25,6 +129,15 @@ const App: React.FC = () => {
 
     const chartRef = useRef<Chart | null>(null);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+    // Map for dynamic icon rendering based on the 'icon' string
+    const iconMap: { [key: string]: React.FC } = {
+        skills: SkillsIcon,
+        leadership: LeadershipIcon,
+        tenure: TenureIcon,
+        expertise: ExpertiseIcon,
+        chart: ChartIcon, // Added ChartIcon to the map if you want to use it dynamically
+    };
 
     useEffect(() => {
         if (insights && canvasRef.current) {
@@ -38,7 +151,7 @@ const App: React.FC = () => {
                     data: {
                         labels: ['Technical Skills', 'Soft Skills'],
                         datasets: [{
-                            data: [insights.skillDistribution.technical, insights.skillDistribution.soft],
+                            data: [insights.skill_distribution.technical_percentage, insights.skill_distribution.soft_percentage],
                             backgroundColor: ['rgba(56, 189, 248, 0.8)', 'rgba(113, 113, 122, 0.7)'],
                             borderColor: ['#0f172a', '#0f172a'],
                             borderWidth: 2,
@@ -57,7 +170,7 @@ const App: React.FC = () => {
                             },
                             tooltip: {
                                 callbacks: {
-                                    label: (context) => `${context.label}: ${context.raw}%`
+                                    label: (context: { label: any; raw: any; }) => `${context.label}: ${context.raw}%`
                                 }
                             },
                             datalabels: {
@@ -66,7 +179,7 @@ const App: React.FC = () => {
                                     weight: 'bold',
                                     size: 16,
                                 },
-                                formatter: (value) => `${value}%`
+                                formatter: (value: any) => `${value}%`
                             }
                         }
                     }
@@ -88,15 +201,24 @@ const App: React.FC = () => {
         setInsights(null);
 
         try {
-            const data = await generateInsights(jobTitle, jobLevel);
+            const data = await getJobInsights(jobTitle, jobLevel);
             setInsights(data);
         } catch (err: any) {
-            setError(err.message || 'An unknown error occurred.');
+            console.error("Failed to fetch insights:", err);
+            setError(err.message || 'Failed to fetch job insights. Please try again.');
         } finally {
             setIsLoading(false);
         }
     };
     
+    // Prepare insights for rendering in the same structured way as before
+    const formattedKeyInsights: RawInsightCategory[] = insights ? [
+        { title: "Skill Requirements", icon: "skills", data: insights.skill_requirements },
+        { title: "Leadership Experience", icon: "leadership", data: insights.leadership_experience },
+        { title: "Employee Tenure", icon: "tenure", data: insights.employee_tenure },
+        { title: "Required Expertise", icon: "expertise", data: insights.required_expertise },
+    ] : [];
+
     return (
         <div className="container mx-auto px-4 py-8 max-w-6xl">
             <header className="text-center mb-10">
@@ -129,7 +251,7 @@ const App: React.FC = () => {
                                     id="jobTitle" 
                                     name="jobTitle" 
                                     value={jobTitle}
-                                    onChange={(e) => setJobTitle(e.target.value)}
+                                    onChange={(e: { target: { value: any; }; }) => setJobTitle(e.target.value)}
                                     disabled={isLoading}
                                     className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition disabled:opacity-50"
                                 >
@@ -142,7 +264,7 @@ const App: React.FC = () => {
                                     id="jobLevel" 
                                     name="jobLevel" 
                                     value={jobLevel}
-                                    onChange={(e) => setJobLevel(e.target.value)}
+                                    onChange={(e: { target: { value: any; }; }) => setJobLevel(e.target.value)}
                                     disabled={isLoading}
                                     className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition disabled:opacity-50"
                                 >
@@ -185,6 +307,7 @@ const App: React.FC = () => {
                              <div className="bg-slate-800/50 p-6 rounded-xl shadow-lg border border-slate-700 flex flex-col items-center mb-8">
                                  <div className="flex items-center gap-4 mb-4">
                                      <div className="bg-slate-700 p-3 rounded-full">
+                                         {/* Using ChartIcon directly or from map if preferred */}
                                          <ChartIcon />
                                      </div>
                                      <h3 className="text-lg font-bold text-slate-200">Skill Distribution</h3>
@@ -194,9 +317,10 @@ const App: React.FC = () => {
                                  </div>
                              </div>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                {insights.keyInsights.map((insight) => {
+                                {formattedKeyInsights.map((insight: RawInsightCategory) => {
                                     const IconComponent = iconMap[insight.icon];
-                                    const points = insight.text.split('*').map(s => s.trim()).filter(Boolean);
+                                    // No need to split by '*' anymore, as the API returns an array of strings directly
+                                    const points = insight.data; 
 
                                     return (
                                         <div key={insight.title} className="bg-slate-800/50 p-6 rounded-xl shadow-lg border border-slate-700 flex flex-col">
@@ -207,7 +331,7 @@ const App: React.FC = () => {
                                                 <h3 className="text-lg font-bold text-slate-200">{insight.title}</h3>
                                             </div>
                                             <ul className="text-slate-400 list-disc list-inside space-y-2 pl-2 flex-grow">
-                                                {points.map((point, index) => <li key={index}>{point}</li>)}
+                                                {points.map((point: string, index: number) => <li key={index}>{point}</li>)}
                                             </ul>
                                         </div>
                                     );
@@ -219,22 +343,22 @@ const App: React.FC = () => {
             </main>
            
 
-<footer class="bg-white rounded-lg shadow-sm m-4 dark:bg-gray-800">
-    <div class="w-full mx-auto max-w-screen-xl p-4 md:flex md:items-center md:justify-between">
-      <span class="text-sm text-gray-500 sm:text-center dark:text-gray-400">© 2025 <a href="https://ai-job-insight-sigma.vercel.app/" class="hover:underline">ETAMU BUSA 521 Group 1</a>. All Rights Reserved.
+<footer className="bg-white rounded-lg shadow-sm m-4 dark:bg-gray-800">
+    <div className="w-full mx-auto max-w-screen-xl p-4 md:flex md:items-center md:justify-between">
+      <span className="text-sm text-gray-500 sm:text-center dark:text-gray-400">© 2025 <a href="https://ai-job-insight-sigma.vercel.app/" className="hover:underline">ETAMU BUSA 521 Group 1</a>. All Rights Reserved.
     </span>
-    <ul class="flex flex-wrap items-center mt-3 text-sm font-medium text-gray-500 dark:text-gray-400 sm:mt-0">
+    <ul className="flex flex-wrap items-center mt-3 text-sm font-medium text-gray-500 dark:text-gray-400 sm:mt-0">
         <li>
-            <a href="#" class="hover:underline me-4 md:me-6">About</a>
+            <a href="#" className="hover:underline me-4 md:me-6">About</a>
         </li>
         <li>
-            <a href="#" class="hover:underline me-4 md:me-6">Privacy Policy</a>
+            <a href="#" className="hover:underline me-4 md:me-6">Privacy Policy</a>
         </li>
         <li>
-            <a href="#" class="hover:underline me-4 md:me-6">Licensing</a>
+            <a href="#" className="hover:underline me-4 md:me-6">Licensing</a>
         </li>
         <li>
-            <a href="#" class="hover:underline">Contact</a>
+            <a href="#" className="hover:underline">Contact</a>
         </li>
     </ul>
     </div>
@@ -245,4 +369,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
